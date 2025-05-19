@@ -1,0 +1,2 @@
+#!/bin/sh
+put arch/arm64/boot/Image

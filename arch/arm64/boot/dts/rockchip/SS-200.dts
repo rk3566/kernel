@@ -1,0 +1,293 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2020 Rockchip Electronics Co., Ltd.
+ * Copyright (c) 2022 Radxa Limited.
+ *
+ */
+
+/dts-v1/;
+
+#include "base_stardust.dtsi"
+#include "bestec_lvds_7inch.dtsi"
+#include <dt-bindings/display/rockchip_vop.h>
+
+/ {
+	model = "Radxa CM3 IO";
+	compatible = "radxa,radxa-cm3-io", "rockchip,rk3566";
+
+	hdmi_sound: hdmi-sound {
+		compatible = "simple-audio-card";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,mclk-fs = <128>;
+		simple-audio-card,name = "rockchip,hdmi";
+
+		simple-audio-card,cpu {
+				sound-dai = <&i2s0_8ch>;
+		};
+		simple-audio-card,codec {
+				sound-dai = <&hdmi>;
+		};
+	};
+
+	vcc5v0_usb30: vcc5v0-usb30-regulator {
+		compatible = "regulator-fixed";
+		enable-active-high;
+		//gpio = <&gpio3 RK_PC2 GPIO_ACTIVE_HIGH>;
+		//pinctrl-names = "default";	
+		//pinctrl-0 = <&vcc5v0_usb30_en>;	// uart5 와 겹침
+		regulator-name = "vcc5v0_usb30";
+		regulator-always-on;
+		regulator-boot-on;
+	};
+
+	vcc_sd: sdmmc-regulator {
+		compatible = "regulator-fixed";
+		gpio = <&gpio0 RK_PA5 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&sdmmc_pwren>;
+		regulator-name = "vcc_sd";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		startup-delay-us = <100000>;
+		vin-supply = <&vcc3v3_sys>;
+	};
+
+	tf_det: tf-det-regulator {
+		compatible = "regulator-fixed";
+		enable-active-low;
+		gpio = <&gpio0 RK_PD4 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&tf_det_en>;
+		regulator-name = "tf_det";
+		regulator-always-on;
+		regulator-boot-on;
+	};
+
+	iostardust{
+                compatible = "bestec,iodriver";
+                pinctrl-names = "default";
+                pinctrl-0 = <&ioport>;
+                TEST,my_pin_gpio_0_b3 = <&gpio0 RK_PB3 GPIO_ACTIVE_LOW>;
+                status = "okay";
+        };
+};
+
+&gpio_leds {
+	pi-led-green {
+		gpios = <&gpio4 4 GPIO_ACTIVE_LOW>;
+		linux,default-trigger = "heartbeat";
+		default-state = "on";
+		pinctrl-0 = <&pi_led>;
+	};
+
+	//pwr-led-red {	//usb 상당 전원과 겹침
+	//	gpios = <&gpio4 15 GPIO_ACTIVE_LOW>;
+	//	linux,default-trigger = "none";
+	//	default-state = "on";
+	//	pinctrl-0 = <&pwr_led>;
+	//};
+};
+
+&i2s0_8ch {
+	status = "okay";
+};
+
+
+&sdmmc0 {
+	max-frequency = <150000000>;
+	supports-sd;
+	bus-width = <4>;
+	cap-mmc-highspeed;
+	cap-sd-highspeed;
+	disable-wp;
+	vmmc-supply = <&vcc_sd>;
+	vqmmc-supply = <&vccio_sd>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdmmc0_bus4 &sdmmc0_clk &sdmmc0_cmd &sdmmc0_det>;
+	status = "okay";
+	//status = "disabled";
+};
+
+
+&u2phy0_host {
+	phy-supply = <&vcc5v0_usb30>;
+	status = "okay";
+};
+
+&usbhost_dwc3 {
+	status = "okay";
+};
+
+&usbhost30 {
+	status = "okay";
+};
+
+&combphy1_usq {
+	status = "okay";
+};
+
+&combphy2_psq {
+	status = "okay";
+};
+
+&uart1 {
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&uart1m1_xfer>;
+        dma-names = "!tx", "!rx";
+
+};
+
+
+&uart3 {
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&uart3m0_xfer>;
+        dma-names = "!tx", "!rx";
+};
+
+&uart5 {
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&uart5m1_xfer>;
+        dma-names = "!tx", "!rx";
+};
+
+
+&pinctrl {
+	usb {
+		vcc5v0_usb30_en: vcc5v0-host-en {
+			rockchip,pins = <3 RK_PC2 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
+
+	leds {
+		pi_led: pi-led{
+			rockchip,pins = <4 RK_PA4 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+
+		pwr_led: pwr-led{
+			rockchip,pins = <4 RK_PB7 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
+	io_stardust{
+                ioport: ioport{
+                        rockchip,pins = <4 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>,// usb 하단 PWR
+                                        <4 RK_PB7 RK_FUNC_GPIO &pcfg_pull_none>,// usb 상단 PWR
+                                        <4 RK_PA7 RK_FUNC_GPIO &pcfg_pull_none>,// Power On
+                                        <3 RK_PD2 RK_FUNC_GPIO &pcfg_pull_up>,// Power Fail
+                                        <4 RK_PA4 RK_FUNC_GPIO &pcfg_pull_none_drv_level_5>,// Run LED
+                                        <3 RK_PD0 RK_FUNC_GPIO &pcfg_pull_none>,// BUZZ
+                                        //<3 RK_PC6 RK_FUNC_GPIO &pcfg_pull_none>,// LCD PWR
+                                        //<4 RK_PB1 RK_FUNC_GPIO &pcfg_pull_none>,// LCD_BL_EN
+                                        <3 RK_PD1 RK_FUNC_GPIO &pcfg_pull_none>;// Recovery
+                                        //<3 RK_PD3 RK_FUNC_GPIO &pcfg_pull_none>,//Touch Rst#
+                                        //<3 RK_PD4 RK_FUNC_GPIO &pcfg_pull_none>,//Touch Int
+                };
+        };
+
+
+	uart1 {
+                uart1m1_xfer: uart1m1-xfer {
+                        rockchip,pins =
+                                /* uart1_rxm1 */
+                                <3 RK_PD7 4 &pcfg_pull_up_drv_level_5>,
+                                /* uart1_txm1 */
+                                <3 RK_PD6 4 &pcfg_pull_up_drv_level_5>;
+                };
+        };
+
+        uart3 {
+                uart3m0_xfer: uart3m0-xfer {
+                        rockchip,pins =
+                                /* uart3_rxm0 */
+                                <1 RK_PA0 2 &pcfg_pull_up_drv_level_5>,
+                                /* uart3_txm0 */
+                                <1 RK_PA1 2 &pcfg_pull_up_drv_level_5>;
+                };
+
+        };
+
+
+        uart5 {
+                uart5m1_xfer: uart5m1-xfer {
+                        rockchip,pins =
+                                /* uart5_rxm1 */
+                                <3 RK_PC3 4 &pcfg_pull_up_drv_level_5>,
+                                /* uart5_txm1 */
+                                <3 RK_PC2 4 &pcfg_pull_up_drv_level_5>;
+                };
+        };
+
+	sdcard {
+		sdmmc_pwren: sdmmc-pwren {
+			rockchip,pins = <0 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+
+		tf_det_en: tf-det-en {
+			rockchip,pins = <0 RK_PD4 RK_FUNC_GPIO &pcfg_output_low>;
+		};
+	};
+
+	gmac1 {
+		gmac1m0_miim: gmac1m0-miim {
+			rockchip,pins =
+				/* gmac1_mdcm0 */
+				<3 RK_PC4 3 &pcfg_pull_none_drv_level_15>,
+				/* gmac1_mdiom0 */
+				<3 RK_PC5 3 &pcfg_pull_none_drv_level_15>;
+		};
+
+		gmac1m0_rx_bus2: gmac1m0-rx-bus2 {
+			rockchip,pins =
+				/* gmac1_rxd0m0 */
+				<3 RK_PB1 3 &pcfg_pull_none_drv_level_15>,
+				/* gmac1_rxd1m0 */
+				<3 RK_PB2 3 &pcfg_pull_none_drv_level_15>,
+				/* gmac1_rxdvcrsm0 */
+				<3 RK_PB3 3 &pcfg_pull_none_drv_level_15>;
+		};
+
+		gmac1m0_tx_bus2: gmac1m0-tx-bus2 {
+			rockchip,pins =
+				/* gmac1_txd0m0 */
+				<3 RK_PB5 3 &pcfg_pull_none_drv_level_15>,
+				/* gmac1_txd1m0 */
+				<3 RK_PB6 3 &pcfg_pull_none_drv_level_15>,
+				/* gmac1_txenm0 */
+				<3 RK_PB7 3 &pcfg_pull_none_drv_level_15>;
+		};
+
+		gmac1m0_rgmii_clk: gmac1m0-rgmii-clk {
+			rockchip,pins =
+				/* gmac1_rxclkm0 */
+				<3 RK_PA7 3 &pcfg_pull_none_drv_level_15>,
+				/* gmac1_txclkm0 */
+				<3 RK_PA6 3 &pcfg_pull_none_drv_level_15>;
+		};
+
+		gmac1m0_rgmii_bus: gmac1m0-rgmii-bus {
+			rockchip,pins =
+				/* gmac1_rxd2m0 */
+				<3 RK_PA4 3 &pcfg_pull_none_drv_level_15>,
+				/* gmac1_rxd3m0 */
+				<3 RK_PA5 3 &pcfg_pull_none_drv_level_15>,
+				/* gmac1_txd2m0 */
+				<3 RK_PA2 3 &pcfg_pull_none_drv_level_15>,
+				/* gmac1_txd3m0 */
+				<3 RK_PA3 3 &pcfg_pull_none_drv_level_15>;
+		};
+
+		gmac1m0_clkinout: gmac1m0-clkinout {
+			rockchip,pins =
+				/* gmac1_mclkinoutm0 */
+				<3 RK_PC0 3 &pcfg_pull_none_drv_level_15>;
+		};
+	};
+};
+
+&fiq_debugger {
+	status = "okay";
+ 	rockchip,baudrate = <115200>;  /* Only 115200 and 1500000 */
+};
+

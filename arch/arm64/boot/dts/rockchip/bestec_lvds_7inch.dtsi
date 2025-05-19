@@ -1,0 +1,331 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2022 Radxa Limited.
+ *
+ */
+
+///dts-v1/;
+#include <dt-bindings/display/media-bus-format.h>
+#include <dt-bindings/display/drm_mipi_dsi.h>
+#include <dt-bindings/display/rockchip_vop.h>
+#include <dt-bindings/sensor-dev.h>
+
+
+/ {
+	compatible = "radxa,radxa-cm3-io", "rockchip,rk3566";
+ 	lvds_panel: lvds-panel {
+        	compatible = "simple-panel";
+        	status = "okay";
+        	//enable-gpios = <&pca9555 PCA_IO1_2 GPIO_ACTIVE_HIGH>;
+        	backlight = <&lcd0_backlight>;
+        	enable-delay-ms = <35>;
+        	prepare-delay-ms = <6>;
+        	unprepare-delay-ms = <0>;
+        	disable-delay-ms = <20>;
+        	bus-format = <MEDIA_BUS_FMT_RGB888_1X7X4_SPWG>;
+		rotation=<90>;
+        	display-timings {
+            		native-mode = <&timing0>;
+            		timing0: timing0 {
+                		clock-frequency = <55000000>;
+                		hactive = <1024>;
+                		vactive = <600>;
+                		hfront-porch = <24>;
+                		hback-porch = <160>;
+                		hsync-len = <136>;
+                		vfront-porch = <3>;
+                		vback-porch = <29>;
+                		vsync-len = <6>;
+                		hsync-active = <0>;
+                		vsync-active = <0>;
+                		de-active = <0>;
+                		pixelclk-active = <0>;
+            		};
+            	};
+
+        	ports {
+            		#address-cells = <1>;
+            		#size-cells = <0>;
+
+            		port@0 {
+                		reg = <0>;
+                		//dual-lvds-even-pixels;
+                		panel_in_lvds: endpoint {
+                    			remote-endpoint = <&lvds_out_panel>;
+                		};
+           		};
+        	};
+	};
+
+ 	virtual_ts: virtual_ts {
+        	compatible = "bestec,virtual_ts";
+        	status = "okay";
+	};
+
+
+
+	lcd0_backlight: lcd0-backlight {
+		status = "okay";
+		compatible = "pwm-backlight";
+		//pwms = <&pwm11 0 250000 0>;	// 4khz
+		pwms = <&pwm11 0 2500000 0>;	// 500hz
+		brightness-levels = <
+			255 254 253 252 251 250 249 248
+			247 246 245 244 243 242 241 240
+			239 238 237 236 235 234 233 232
+			231 230 229 228 227 226 225 224
+			223 222 221 220 219 218 217 216
+			215 214 213 212 211 210 209 208
+			207 206 205 204 203 202 201 200
+			199 198 197 196 195 194 193 192
+			191 190 189 188 187 186 185 184
+			183 182 181 180 179 178 177 176
+			175 174 173 172 171 170 169 168
+			167 166 165 164 163 162 161 160
+			159 158 157 156 155 154 153 152
+			151 150 149 148 147 146 145 144
+			143 142 141 140 139 138 137 136
+			135 134 133 132 131 130 129 128
+			127 126 125 124 123 122 121 120
+			119 118 117 116 115 114 113 112
+			111 110 109 108 107 106 105 104
+			103 102 101 100  99  98  97  96
+			 95  94  93  92  91  90  89  88
+			 87  86  85  84  83  82  81  80
+			 79  78  77  76  75  74  73  72
+			 71  70  69  68  67  66  65  64
+			 63  62  61  60  59  58  57  56
+			 55  54  53  52  51  50  49  48
+			 47  46  45  44  43  42  41  40
+			 39  38  38  37  37  36  36  35
+			 35  34  34  33  33  32  32  31
+			 31  30  30  29  29  28  28  27
+			 27  26  26  25  25  24  24  23
+			 23  22  22  21  21  20  20   0
+		>;
+		default-brightness-level = <200>;
+		enable-gpios = <&gpio4 RK_PB1 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&lcd0_backlight_drv>;
+	};
+};
+
+
+&lvds {
+    status = "okay";
+    ports {
+        lvds_out:port@1 {
+            reg = <1>;
+
+            lvds_out_panel: endpoint {
+                remote-endpoint = <&panel_in_lvds>;
+            };
+        };
+    };
+};
+
+
+&i2c2 {
+    	status = "okay";
+    //i2c-scl-rising-time-ns = <800>;
+    //i2c-scl-falling-time-ns = <100>;
+	 touchscreen: touchscreen@48 {
+                 compatible = "ti,tsc2007";
+                 reg = <0x48>;
+                 pinctrl-names = "default";
+        	 pinctrl-0 = <&edt_ft5x06_pins>;
+		 interrupt-parent = <&gpio3>;
+	 	 interrupts = <RK_PD4 IRQ_TYPE_EDGE_FALLING>;
+		 gpios = <&gpio3 RK_PD4 IRQ_TYPE_EDGE_FALLING>;
+                 ti,x-plate-ohms = <750>;
+                 wakeup-source;
+                 status = "okay";
+
+             };
+ 	polytouch: edt-ft5x06@38 {
+        	compatible = "edt,edt-ft5406";
+        	reg = <0x38>;
+        	pinctrl-names = "default";
+        	pinctrl-0 = <&edt_ft5x06_pins>;
+        	invert;  /* 7인치 구형에만 해당, y좌료플 반전시킴 */
+        	reset-gpios = <&gpio3 RK_PD3 GPIO_ACTIVE_LOW>;
+        	//irq-gpios = <&gpio3 RK_PD4 GPIO_ACTIVE_HIGH>;
+		interrupt-parent = <&gpio3>;
+		interrupts = <RK_PD4 IRQ_TYPE_EDGE_FALLING>;
+        	/*   wake-gpios = <&gpio4 9 0>;*/
+        	screen-x = <1024>;
+        	screen-y = <600>;
+        	gain = <15>;
+        	threshold = <45>;
+        	status = "okay";
+    	};
+
+};
+
+
+&pwm11 {
+	status = "okay";
+	pinctrl-0 = <&pwm11m1_pins>;
+};
+
+
+&hdmi {
+    status = "okay";
+};
+
+&hdmi_in_vp0 {
+    status = "okay";
+};
+
+&hdmi_in_vp1 {
+    status = "disabled";
+};
+
+//lvds
+&dsi0 {
+    status = "disabled";
+};
+
+&dsi0_in_vp0 {
+    status = "disabled";
+};
+
+&dsi0_in_vp1 {
+    status = "disabled";
+};
+
+&video_phy0 {
+    status = "okay";
+};
+
+&lvds_in_vp1 {
+    status = "okay";
+};
+
+&lvds_in_vp2 {
+    status = "disabled";
+};
+
+&route_lvds {
+    status = "okay";
+    connect = <&vp1_out_lvds>;
+};
+
+&vop {
+    status = "okay";
+    assigned-clocks = <&cru DCLK_VOP0>, <&cru DCLK_VOP1>;
+    assigned-clock-parents = <&pmucru PLL_HPLL>, <&cru PLL_VPLL>;
+};
+&vop_mmu {
+        status = "okay";
+};
+
+&display_subsystem {
+    status = "okay";
+};
+
+
+&route_hdmi {
+        status = "okay";
+        connect = <&vp0_out_hdmi>;
+};
+
+&vp0 {
+        rockchip,plane-mask = <(
+                                1 << ROCKCHIP_VOP2_CLUSTER0 | 1 << ROCKCHIP_VOP2_ESMART0 |
+                                1 << ROCKCHIP_VOP2_CLUSTER1 | 1 << ROCKCHIP_VOP2_ESMART1 )>;
+        rockchip,primary-plane = <ROCKCHIP_VOP2_ESMART0>;
+        cursor-win-id = <ROCKCHIP_VOP2_ESMART1>;
+	//xmirror-enable =<1>;
+};
+
+&vp1 {	// 여기가 동작됨
+        rockchip,plane-mask = <(1 << ROCKCHIP_VOP2_SMART0 | 1 << ROCKCHIP_VOP2_SMART1)>;
+        rockchip,primary-plane = <ROCKCHIP_VOP2_SMART0>;
+	//xmirror-enable =<1>;
+	disable-afbc-win=<0>;
+	disable-win-move=<0>;
+};
+
+&vp2 {
+        status = "disabled";
+};
+
+&iep {
+        status = "okay";
+};
+
+&iep_mmu {
+        status = "okay";
+};
+
+&jpegd {
+        status = "okay";
+};
+
+&jpegd_mmu {
+        status = "okay";
+};
+
+&mpp_srv {
+        status = "okay";
+};
+
+&rk_rga {
+        status = "okay";
+};
+
+&rkvdec {
+        rockchip,disable-auto-freq;
+        assigned-clock-rates = <396000000>, <396000000>, <396000000>, <600000000>;
+        //status = "okay";
+        status = "disabled";
+};
+
+&rkvdec_mmu {
+        //status = "okay";
+        status = "disabled";
+};
+
+&rkvenc {
+        venc-supply = <&vdd_logic>;
+        status = "disabled";
+};
+
+&rkvenc_mmu {
+        status = "disabled";
+};
+
+&rknpu {
+        rknpu-supply = <&vdd_gpu>;
+        status = "disabled";
+};
+
+&rknpu_mmu {
+        status = "disabled";
+};
+
+&rng {
+        status = "okay";
+};
+
+
+
+&pinctrl {
+	dsi0-lcd {
+		dsi0_lcd_rst_gpio: dsi0-lcd-rst-gpio {
+			rockchip,pins = <4 RK_PA2 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+
+		lcd0_backlight_drv: lcd0-backlight-drv {
+			rockchip,pins = <4 RK_PB1 RK_FUNC_GPIO &pcfg_pull_up>;	
+		};
+
+		edt_ft5x06_pins: edt_ft5x06_pins{
+			rockchip,pins = <3 RK_PD3 RK_FUNC_GPIO &pcfg_pull_up>,	// #rst
+					<3 RK_PD4 RK_FUNC_GPIO &pcfg_pull_up>;	// int
+		};
+	};
+
+};
+
