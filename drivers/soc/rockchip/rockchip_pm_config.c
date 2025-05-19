@@ -275,6 +275,7 @@ static int pm_config_probe(struct platform_device *pdev)
 	return 0;
 }
 
+
 #ifndef MODULE
 static int pm_config_prepare(struct device *dev)
 {

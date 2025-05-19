@@ -472,3 +472,7 @@
 		/* GPIO4_D4-D7 */
 		"", "", "", "";
 };
+&fiq_debugger {
+        status = "okay";
+        rockchip,baudrate = <115200>;  /* Only 115200 and 1500000 */
+};

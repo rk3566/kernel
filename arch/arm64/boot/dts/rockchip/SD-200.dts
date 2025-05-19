@@ -235,7 +235,8 @@
                                 /* uart3_rxm0 */
                                 <1 RK_PA0 2 &pcfg_pull_up_drv_level_5>,
                                 /* uart3_txm0 */
-                                <1 RK_PA1 2 &pcfg_pull_up_drv_level_5>;
+                                //<1 RK_PA1 2 &pcfg_pull_up_drv_level_5>;
+                                <1 RK_PA1 2 &pcfg_pull_none>;
                 };
 
         };

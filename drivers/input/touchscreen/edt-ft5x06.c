@@ -126,6 +126,8 @@ struct edt_ft5x06_ts_data {
 
 	struct edt_reg_addr reg_addr;
 	enum edt_ver version;
+	int screen_x, screen_y; // smiles77 add
+        bool invert;    // smiles77 add
 };
 
 struct edt_i2c_chip_data {
@@ -255,6 +257,11 @@ static irqreturn_t edt_ft5x06_ts_isr(int irq, void *dev_id)
 
 		x = get_unaligned_be16(buf) & 0x0fff;
 		y = get_unaligned_be16(buf + 2) & 0x0fff;
+		 // smiles77 add
+                if (tsdata->invert) {
+                       //  x = tsdata->screen_x - x;   // smiles77 y좌표만 반전시킴
+                        y = tsdata->screen_y - y;
+                }
 		/* The FT5x26 send the y coordinate first */
 		if (tsdata->version == EV_FT)
 			swap(x, y);
@@ -975,6 +982,16 @@ static void edt_ft5x06_ts_get_defaults(struct device *dev,
 						  reg_addr->reg_offset_y, val);
 		tsdata->offset_y = val;
 	}
+	 // smiles77 add
+#if 1
+        if (device_property_read_bool(dev, "invert"))
+                tsdata->invert = true;
+
+        if (!device_property_read_u32(dev, "screen-x", &val))
+                tsdata->screen_x= val;
+        if (!device_property_read_u32(dev, "screen-y", &val))
+                tsdata->screen_y= val;
+#endif
 }
 
 static void

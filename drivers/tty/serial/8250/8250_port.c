@@ -2452,7 +2452,7 @@ dont_test_tx_en:
 			msg = "failed to request DMA";
 #endif
 		if (msg) {
-			dev_warn_ratelimited(port->dev, "%s\n", msg);
+			//dev_warn_ratelimited(port->dev, "%s\n", msg);	// smiles77
 			up->dma = NULL;
 		}
 	}

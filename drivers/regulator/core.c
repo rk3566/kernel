@@ -1669,8 +1669,13 @@ static struct regulator *create_regulator(struct regulator_dev *rdev,
 		err = sysfs_create_link_nowarn(&rdev->dev.kobj, &dev->kobj,
 					       supply_name);
 		if (err) {
-			rdev_dbg(rdev, "could not add device link %s: %pe\n",
-				  dev->kobj.name, ERR_PTR(err));
+			//rdev_dbg(rdev, "could not add device link %s: %pe\n",	// smiles77 modified
+			//	  dev->kobj.name, ERR_PTR(err));
+
+			// 실패해도 상관없음
+			// pmic의 레귤레이터를 regulator.1로 연결할려는데, regulator.1이 이미 있어서 실패함
+			rdev_dbg(rdev, "could not add device link %s: %s %s %pe\n",	// smiles77 modified
+				  dev->kobj.name, rdev->dev.kobj.name, supply_name, ERR_PTR(err));
 			/* non-fatal */
 		}
 	}

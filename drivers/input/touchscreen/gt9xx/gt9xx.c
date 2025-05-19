@@ -2573,7 +2573,7 @@ s32 gtp_gt9xxf_init(struct i2c_client *client)
     return SUCCESS;
 }
 
-void gtp_get_chip_type(struct goodix_ts_data *ts)
+int gtp_get_chip_type(struct goodix_ts_data *ts)
 {
     u8 opr_buf[10] = {0x00};
     s32 ret = 0;
@@ -2586,7 +2586,7 @@ void gtp_get_chip_type(struct goodix_ts_data *ts)
     {
         GTP_ERROR("Failed to get chip-type, set chip type default: GOODIX_GT9");
         ts->chip_type = CHIP_TYPE_GT9;
-        return;
+        return -1;
     }
     
     if (!memcmp(opr_buf, "GOODIX_GT9", 10))
@@ -2597,13 +2597,15 @@ void gtp_get_chip_type(struct goodix_ts_data *ts)
     {
 	  ts->chip_type = CHIP_TYPE_GT9110;
 	  GTP_INFO("Chip Type: GOODIX_GT9110");
-	  return;
+	  return 0;
     }
     else // GT9XXF
     {
         ts->chip_type = CHIP_TYPE_GT9F;
     }
     GTP_INFO("Chip Type: %s", (ts->chip_type == CHIP_TYPE_GT9) ? "GOODIX_GT9" : "GOODIX_GT9F");
+
+    return 0;
 }
 
 #endif
@@ -2690,12 +2692,14 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 		gtp_change_x2y = TRUE;
 		gtp_x_reverse = FALSE;
 		gtp_y_reverse = FALSE;
-	} else if (val == 9112) {
+	} else if (val == 9112) {	// smiles77
 		m89or101 = FALSE;
-		bgt9112 = TRUE;
-		gtp_change_x2y = FALSE;
+		 // 8inch gt971, 10.1inch gt9271
+		bgt9112 = FALSE;	// org:TRUE
+		bgt9271 = TRUE;		// add
+		gtp_change_x2y = TRUE;	// org:FALSE
 		gtp_x_reverse = FALSE;
-		gtp_y_reverse = FALSE;
+		gtp_y_reverse = TRUE;	// org:FALSE
         } else if (val == 9271) {
 		m89or101 = FALSE;
 		bgt9271 = TRUE;
@@ -2719,6 +2723,7 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 		gtp_y_reverse = TRUE;
 	}
 
+#if 0	// smiles77 blocked	이것을 블럭처리 해야, lcd가 없을때 커널 패닉이 안발생함
 	ts->tp_regulator = devm_regulator_get(&client->dev, "tp");
 	if (IS_ERR(ts->tp_regulator)) {
 		dev_err(&client->dev, "failed to get regulator, %ld\n",
@@ -2729,7 +2734,9 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	ret = regulator_enable(ts->tp_regulator);
 	if (ret < 0)
 		GTP_ERROR("failed to enable tp regulator\n");
+#endif
 	msleep(20);
+
 
     ts->irq_pin = of_get_named_gpio_flags(np, "touch-gpio", 0, (enum of_gpio_flags *)(&ts->irq_flags));
     ts->rst_pin = of_get_named_gpio_flags(np, "reset-gpio", 0, &rst_flags);
@@ -2791,7 +2798,11 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
     }
  */
 #if GTP_COMPATIBLE_MODE
-    gtp_get_chip_type(ts);
+    ret = gtp_get_chip_type(ts);	// smiles77 에러시 probe 실패 goto로 가게 수정
+    if(ret == -1){
+        goto probe_init_error;
+    }
+
     
     if (CHIP_TYPE_GT9F == ts->chip_type)
     {

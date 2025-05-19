@@ -148,6 +148,7 @@ static int c_show(struct seq_file *m, void *v)
 	bool compat = personality(current->personality) == PER_LINUX32 ||
 		      is_compat_task();
 
+	seq_puts(m, "CPU\t\t: RK3566\n\n");     // smiles77 add
 	for_each_online_cpu(i) {
 		struct cpuinfo_arm64 *cpuinfo = &per_cpu(cpu_data, i);
 		u32 midr = cpuinfo->reg_midr;

@@ -23442,8 +23442,7 @@ rtl8168_get_bios_setting(struct net_device *dev)
         case CFG_METHOD_31:
         case CFG_METHOD_32:
         case CFG_METHOD_33:
-                tp->bios_setting = RTL_R32(tp, 0x8c);
-                break;
+                tp->bios_setting = RTL_R32(tp, 0x8c); break;
         }
 }
 
@@ -23488,6 +23487,10 @@ static int rtl8168_led_configuration(struct rtl8168_private *tp)
         u32 led_data;
         int ret;
 
+        //RTL_W16(tp, CustomLED, 0xfbc);	// smiles77 LED0:1G LED1:10/100 LED2:10/1000/1G
+        //RTL_W16(tp, CustomLED, 0xf87);		// smiles77 LED0:LINK LED1:ACK LED2:10/1000/1G/ACK
+        //RTL_W16(tp, CustomLED, 0xfcb);		// smiles77 LED0:10/100M/ACK/LINK LED1:1G/ACK/LINK LED2:10/1000/1G/ACK
+        RTL_W16(tp, CustomLED, 0xfff);		// smiles77 LED0:10/100M/ACK/LINK LED1:10/100M/ACK/LINK LED2:10/100M/ACK/LINK 
         ret = of_property_read_u32(tp->pci_dev->dev.of_node,
                                   "realtek,led-data", &led_data);
 

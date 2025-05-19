@@ -225,5 +225,8 @@ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3588s-rock-5a.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3588s-tablet-rk806-single-v10.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3588s-tablet-v10.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3588s-tablet-v11.dtb
+dtb-$(CONFIG_ARCH_ROCKCHIP) += SS-200.dtb
+dtb-$(CONFIG_ARCH_ROCKCHIP) += SD-200.dtb
+dtb-$(CONFIG_ARCH_ROCKCHIP) += SD-2000.dtb
 
 subdir-y := $(dts-dirs) overlay

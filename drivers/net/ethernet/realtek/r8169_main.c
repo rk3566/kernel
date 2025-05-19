@@ -5225,15 +5225,19 @@ static void rtl_hw_initialize(struct rtl8169_private *tp)
 {
 	switch (tp->mac_version) {
 	case RTL_GIGA_MAC_VER_49 ... RTL_GIGA_MAC_VER_52:
+		printk("1xxxx %d\n", tp->mac_version);
 		rtl8168ep_stop_cmac(tp);
 		fallthrough;
 	case RTL_GIGA_MAC_VER_40 ... RTL_GIGA_MAC_VER_48:
+		printk("2xxxx %d\n", tp->mac_version);
 		rtl_hw_init_8168g(tp);
 		break;
 	case RTL_GIGA_MAC_VER_60 ... RTL_GIGA_MAC_VER_63:
+		printk("3xxxx %d\n", tp->mac_version);
 		rtl_hw_init_8125(tp);
 		break;
 	default:
+		printk("4xxxx %d\n", tp->mac_version);
 		break;
 	}
 }
@@ -5400,6 +5404,7 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 	rtl_init_rxcfg(tp);
 
 	rtl8169_irq_mask_and_ack(tp);
+
 
 	rtl_hw_initialize(tp);
 
